@@ -36,8 +36,12 @@ def index(request, index=0, n_recommendations=3):
     queryset = Movie.objects.all().values()
     movies_df = pd.DataFrame(list(queryset))
 
+    print('Movies Count: {}'.format(movies_df.shape[0]))
+
     # Compute row position for the selected movie
     selectedIndex = movies_df.index[movies_df['movieId'] == index][0]
+
+    print("Movie:{}".format(movies_df['original_title'].iloc[selectedIndex]))
 
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'])

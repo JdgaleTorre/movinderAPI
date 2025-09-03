@@ -1,72 +1,69 @@
-from django.shortcuts import render
-from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from scipy.spatial.distance import euclidean
+from rest_framework.response import Response
+from scipy.spatial.distance import cdist
 from sklearn.feature_extraction.text import TfidfVectorizer
-import pandas as pd
 from recommendations.models import Movie
+import pandas as pd
+import numpy as np
 
 def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matrix=None):
-    """
-    Recommend movies based on Euclidean distance of TF-IDF features.
-    """
-    print(f"Selected index: {selected_idx}")
-    print(f"DataFrame shape: {df.shape}")
-    print(f"TF-IDF matrix shape: {tfidf_matrix.shape}")
+    try:
+        # Convert the selected movie vector to dense 1D array
+        selected_vector = tfidf_matrix[selected_idx, :].toarray()  # shape (1, n_features)
+        
+        # Compute Euclidean distances from selected movie to all movies
+        distances = cdist(selected_vector, tfidf_matrix.toarray(), metric='euclidean').flatten()
+        
+        # Exclude the selected movie itself
+        distances[selected_idx] = np.inf
+        
+        # Get indices of top N closest movies
+        recommended_indices = distances.argsort()[:n_recommendations]
+        
+        # Return only movieId as a list
+        recommended_movie_ids = df.iloc[recommended_indices]["movieId"].tolist()
+        return recommended_movie_ids
 
-    selected_vector = tfidf_matrix[selected_idx, :]
-    print(f"Selected vector shape: {selected_vector.shape}")
-
-    distances = {}
-
-    for idx in range(tfidf_matrix.shape[0]):
-        if idx != selected_idx:
-            try:
-                distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx, :].toarray())
-                print(f"Distance from {selected_idx} to {idx}: {distance}")
-                distances[idx] = distance
-            except Exception as e:
-                print(f"Error calculating distance from {selected_idx} to {idx}: {e}")
-                raise Exception("Error calculating distance", e)
-            
-    # Get top N recommendations
-    recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]
-    recommended_movies = df.iloc[recommended_indices][["movieId", "original_title"]]
-    return recommended_movies
+    except Exception as e:
+        # Log the full traceback for Render
+        import traceback
+        print("Error in recommend_movies_euclidean:", str(e))
+        traceback.print_exc()
+        return []
 
 @api_view(['GET'])
 def index(request, index=0, n_recommendations=3):
-    """
-    API endpoint to get movie recommendations based on a movieId.
-    """
-    # Load all movies from DB
-    queryset = Movie.objects.all().values()
-    movies_df = pd.DataFrame(list(queryset))
-
-    if movies_df.empty:
-        return Response({"error": "No movies in the database"}, status=404)
-
-    # Find numeric row index of the selected movie
     try:
-        selected_idx = movies_df.index[movies_df['movieId'] == int(index)][0]
-    except IndexError:
-        return Response({"error": f"Movie with movieId {index} not found"}, status=404)
+        # Load movies from DB into DataFrame
+        queryset = Movie.objects.all().values()
+        movies_df = pd.DataFrame(list(queryset))
+        
+        if movies_df.empty:
+            return Response({"error": "No movies found in the database"}, status=500)
 
-    # Compute TF-IDF matrix
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'].fillna(''))
+        # Find the row index of the selected movie
+        selected_idx = movies_df.index[movies_df['movieId'] == int(index)].tolist()
+        if not selected_idx:
+            return Response({"error": f"MovieId {index} not found"}, status=404)
+        selected_idx = selected_idx[0]
 
-    # Get recommendations
-    try:
-        recommended_movies = recommend_movies_euclidean(
+        # Create TF-IDF matrix
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'])
+
+        # Get recommendations
+        recommendations = recommend_movies_euclidean(
             selected_idx,
             movies_df,
             n_recommendations=n_recommendations,
             tfidf_matrix=tfidf_matrix
         )
+
+        return Response(recommendations)
+
     except Exception as e:
+        import traceback
+        print("Error in index view:", str(e))
+        traceback.print_exc()
         return Response({"error": str(e)}, status=500)
-
-    # Return as list of dicts
-    return Response(recommended_movies["movieId"].tolist())
-

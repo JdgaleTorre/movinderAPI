@@ -24,8 +24,10 @@ def recommend_movies_euclidean(selected_movie, df, n_recommendations=3, tfidf_ma
     print(f"Selected vector shape: {selected_vector.shape}")
 
     for idx in range(len(df)):
+        print(idx, selected_movie)
         if idx != selected_movie:
             distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx].toarray())
+            print(distance)
             distances[idx] = distance
 
     recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]

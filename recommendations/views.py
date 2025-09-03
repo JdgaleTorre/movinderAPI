@@ -1,67 +1,60 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
 from scipy.spatial.distance import euclidean
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
-import numpy as np
-from pathlib import Path
-from django.conf import settings
-
 from recommendations.models import Movie
 
-
-# Create your views here.
-def recommend_movies_euclidean(selected_movie, df, n_recommendations=3, tfidf_matrix=None):
-    print(f"Selected movie index: {selected_movie}")
-    print(f"DataFrame shape: {df.shape}")
-    print(f"TF-IDF matrix shape: {tfidf_matrix.shape if tfidf_matrix is not None else 'None'}")
-    
+def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matrix=None):
+    """
+    Recommend movies based on Euclidean distance of TF-IDF features.
+    """
     distances = {}
-    selected_vector = tfidf_matrix[selected_movie]
-    print(f"Selected vector shape: {selected_vector.shape}")
+    # Select the row properly as a 2D slice
+    selected_vector = tfidf_matrix[selected_idx, :]
 
-    for idx in range(len(df)):
-        print(idx, selected_movie)
-        if idx != selected_movie:
-            distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx].toarray())
-            print(distance)
+    for idx in range(tfidf_matrix.shape[0]):
+        if idx != selected_idx:
+            distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx, :].toarray())
+            print(f"Distance: {distance}")
             distances[idx] = distance
 
+    # Get top N recommendations
     recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]
-    print(f"Recommended indices: {recommended_indices}")
-
-    # Return movieId column from numeric indices
-    recommended_movies = df.iloc[recommended_indices]["movieId"]
-    print(f"Recommended movies: {recommended_movies.tolist()}")
+    recommended_movies = df.iloc[recommended_indices][["movieId"]]
     return recommended_movies
 
 @api_view(['GET'])
 def index(request, index=0, n_recommendations=3):
-    # Load movies from DB into DataFrame
+    """
+    API endpoint to get movie recommendations based on a movieId.
+    """
+    # Load all movies from DB
     queryset = Movie.objects.all().values()
     movies_df = pd.DataFrame(list(queryset))
 
-    print('Movies Count: {}'.format(movies_df.shape[0]))
+    if movies_df.empty:
+        return Response({"error": "No movies in the database"}, status=404)
 
-    # Compute row position for the selected movie
-    selectedIndex = movies_df.index[movies_df['movieId'] == index][0]
+    # Find numeric row index of the selected movie
+    try:
+        selected_idx = movies_df.index[movies_df['movieId'] == int(index)][0]
+    except IndexError:
+        return Response({"error": f"Movie with movieId {index} not found"}, status=404)
 
-    print("Movie:{}".format(movies_df['original_title'].iloc[selectedIndex]))
-
+    # Compute TF-IDF matrix
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'])
+    tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'].fillna(''))
 
-    print("TF-IDF Matrix Shape: {}".format(tfidf_matrix.shape))
-
-    recommendations = recommend_movies_euclidean(
-        selectedIndex,
+    # Get recommendations
+    recommended_movies = recommend_movies_euclidean(
+        selected_idx,
         movies_df,
         n_recommendations=n_recommendations,
         tfidf_matrix=tfidf_matrix
     )
-    print("Recommendations:", recommendations)
+    
 
-    return Response(list(recommendations))
+    # Return as list of dicts
+    return Response(recommended_movies["movieId"].tolist())

@@ -21,14 +21,17 @@ def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matr
 
     for idx in range(tfidf_matrix.shape[0]):
         if idx != selected_idx:
-            distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx, :].toarray())
-            print(f"Distance from {selected_idx} to {idx}: {distance}")
-            distances[idx] = distance
-
+            try:
+                distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx, :].toarray())
+                print(f"Distance from {selected_idx} to {idx}: {distance}")
+                distances[idx] = distance
+            except Exception as e:
+                print(f"Error calculating distance from {selected_idx} to {idx}: {e}")
+                raise Exception("Error calculating distance", e)
+            
+    # Get top N recommendations
     recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]
-    print(f"Recommended indices: {recommended_indices}")
-    recommended_movies = df.iloc[recommended_indices][["movieId"]]
-    print(f"Recommended movies:\n{recommended_movies}")
+    recommended_movies = df.iloc[recommended_indices][["movieId", "original_title"]]
     return recommended_movies
 
 @api_view(['GET'])
@@ -54,13 +57,16 @@ def index(request, index=0, n_recommendations=3):
     tfidf_matrix = vectorizer.fit_transform(movies_df['combined_features'].fillna(''))
 
     # Get recommendations
-    recommended_movies = recommend_movies_euclidean(
-        selected_idx,
-        movies_df,
-        n_recommendations=n_recommendations,
-        tfidf_matrix=tfidf_matrix
-    )
-    
+    try:
+        recommended_movies = recommend_movies_euclidean(
+            selected_idx,
+            movies_df,
+            n_recommendations=n_recommendations,
+            tfidf_matrix=tfidf_matrix
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
     # Return as list of dicts
     return Response(recommended_movies["movieId"].tolist())
+

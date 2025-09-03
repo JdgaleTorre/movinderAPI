@@ -10,19 +10,25 @@ def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matr
     """
     Recommend movies based on Euclidean distance of TF-IDF features.
     """
-    distances = {}
-    # Select the row properly as a 2D slice
+    print(f"Selected index: {selected_idx}")
+    print(f"DataFrame shape: {df.shape}")
+    print(f"TF-IDF matrix shape: {tfidf_matrix.shape}")
+
     selected_vector = tfidf_matrix[selected_idx, :]
+    print(f"Selected vector shape: {selected_vector.shape}")
+
+    distances = {}
 
     for idx in range(tfidf_matrix.shape[0]):
         if idx != selected_idx:
             distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx, :].toarray())
-            print(f"Distance: {distance}")
+            print(f"Distance from {selected_idx} to {idx}: {distance}")
             distances[idx] = distance
 
-    # Get top N recommendations
     recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]
+    print(f"Recommended indices: {recommended_indices}")
     recommended_movies = df.iloc[recommended_indices][["movieId"]]
+    print(f"Recommended movies:\n{recommended_movies}")
     return recommended_movies
 
 @api_view(['GET'])

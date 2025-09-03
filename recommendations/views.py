@@ -52,5 +52,6 @@ def index(request, index=0, n_recommendations=3):
         n_recommendations=n_recommendations,
         tfidf_matrix=tfidf_matrix
     )
+    print("Recommendations:", recommendations)
 
     return Response(list(recommendations))

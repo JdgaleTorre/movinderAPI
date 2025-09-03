@@ -14,27 +14,26 @@ from recommendations.models import Movie
 
 
 # Create your views here.
-
 def recommend_movies_euclidean(selected_movie, df, n_recommendations=3, tfidf_matrix=None):
     print(f"Selected movie index: {selected_movie}")
     print(f"DataFrame shape: {df.shape}")
     print(f"TF-IDF matrix shape: {tfidf_matrix.shape if tfidf_matrix is not None else 'None'}")
+    
     distances = {}
     selected_vector = tfidf_matrix[selected_movie]
     print(f"Selected vector shape: {selected_vector.shape}")
 
-    for idx, _ in df.iterrows():
+    for idx in range(len(df)):
         if idx != selected_movie:
             distance = euclidean(selected_vector.toarray(), tfidf_matrix[idx].toarray())
-            print(f"Distance from {selected_movie} to {idx}: {distance}")
             distances[idx] = distance
 
     recommended_indices = sorted(distances, key=distances.get)[:n_recommendations]
     print(f"Recommended indices: {recommended_indices}")
 
-    # Return both movieId and original_title
-    recommended_movies = df.loc[recommended_indices, ["movieId"]]["movieId"]
-    print(f"Recommended movies: {recommended_movies}")
+    # Return movieId column from numeric indices
+    recommended_movies = df.iloc[recommended_indices]["movieId"]
+    print(f"Recommended movies: {recommended_movies.tolist()}")
     return recommended_movies
 
 @api_view(['GET'])

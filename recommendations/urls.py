@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     path("<int:index>/", views.index, name="index"),
     path("<int:index>/<int:n_recommendations>", views.index, name="index"),
+    path("ping/", views.ping, name="ping"),
 ]

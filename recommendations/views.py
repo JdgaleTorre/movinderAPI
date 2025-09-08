@@ -67,3 +67,8 @@ def index(request, index=0, n_recommendations=3):
         print("Error in index view:", str(e))
         traceback.print_exc()
         return Response({"error": str(e)}, status=500)
+
+
+@api_view(['GET'])
+def ping(request):
+    return JsonResponse({"message": "pong!"})

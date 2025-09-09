@@ -10,7 +10,7 @@ from keras.preprocessing.sequence import pad_sequences
 from recommendations.models import Movie, User, MovieVote
 import pandas as pd
 import numpy as np
-import tensorflow as tf
+from .mlModel import hybrid_model  # Ensure this import is correct
 
 def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matrix=None):
     try:
@@ -122,12 +122,6 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
         movie_index = movie_map.get(rate['movie_id'])
         if movie_index is not None:
             ratings[movie_index] = rate['vote']
-
-    # Build absolute path to the model
-    model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
-        
-    # load the pre-trained hybrid model
-    hybrid_model = tf.keras.models.load_model(model_path)
 
     # Predict using the hybrid model
     predictions = hybrid_model.predict([

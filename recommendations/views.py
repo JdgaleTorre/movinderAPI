@@ -1,11 +1,16 @@
+import os
+from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from scipy.spatial.distance import cdist
 from sklearn.feature_extraction.text import TfidfVectorizer
-from recommendations.models import Movie
+from keras.layers import TextVectorization
+from keras.preprocessing.sequence import pad_sequences
+from recommendations.models import Movie, User, MovieVote
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 
 def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matrix=None):
     try:
@@ -72,3 +77,78 @@ def index(request, index=0, n_recommendations=3):
 @api_view(['GET'])
 def ping(request):
     return JsonResponse({"message": "pong!"})
+
+
+def recommend_Hybrid_Third_Structure(user_id, top_n=5):
+    # Fetch users and movies
+    users = list(User.objects.all().values('id'))
+    movies = list(Movie.objects.all().values('id', 'movieId', 'combined_features'))
+
+    user_map = {user['id']: i for i, user in enumerate(users)}
+    movie_map = {movie['id']: i for i, movie in enumerate(movies)}
+    reverse_movie_map = {i: movie['movieId'] for i, movie in enumerate(movies)}
+
+    # Extract combined_features as a list
+    combined_features_list = [movie['combined_features'] for movie in movies]
+
+    # Use TextVectorization instead of deprecated Tokenizer
+    max_tokens = 5000  # adjust depending on dataset size
+    max_length = 100   # sequence length
+
+    vectorizer = TextVectorization(
+        max_tokens=max_tokens,
+        output_mode="int",
+        output_sequence_length=max_length
+    )
+
+    # Adapt vectorizer to the text corpus
+    vectorizer.adapt(combined_features_list)
+
+    # Convert text to sequences (tensor)
+    sequences = vectorizer(combined_features_list)
+    features_padded_Hybrid_Third_Structure = sequences.numpy()
+
+    # Map user and movie indices
+    user_idx = user_map[user_id]
+    movie_ids = np.array(list(movie_map.values()))
+    content_features = features_padded_Hybrid_Third_Structure
+
+    # Initialize ratings array
+    ratings = np.zeros(len(movie_ids))
+
+    # Collect user ratings
+    user_ratings = MovieVote.objects.filter(createdBy=user_id).values('movie_id', 'vote')
+    for rate in user_ratings:
+        movie_index = movie_map.get(rate['movie_id'])
+        if movie_index is not None:
+            ratings[movie_index] = rate['vote']
+
+    # Build absolute path to the model
+    model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
+        
+    # load the pre-trained hybrid model
+    hybrid_model = tf.keras.models.load_model(model_path)
+
+    # Predict using the hybrid model
+    predictions = hybrid_model.predict([
+        np.array([user_idx] * len(movie_ids)),  # user indices
+        movie_ids,                             # movie indices
+        ratings,                               # existing ratings
+        content_features                        # movie content features
+    ])
+    
+
+    # Get top-N recommendations
+    top_indices = predictions.flatten().argsort()[-top_n:][::-1]
+    recommended_movie_ids = [movie_ids[i] for i in top_indices]
+
+    # Map back to movie IDs
+    tmdbIds = [reverse_movie_map.get(movie, None) for movie in recommended_movie_ids]
+
+    return tmdbIds
+
+
+@api_view(['GET'])
+def hybridNeuralNetworkRecomendations(request, userId, n_recommendations=10):
+    recommendations = recommend_Hybrid_Third_Structure(userId, top_n=n_recommendations)
+    return Response(recommendations)

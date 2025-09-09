@@ -37,9 +37,28 @@ class MovieVote(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "MovieVote" if USE_POSTGRES else "recommendations_movie_vote"
+        db_table = "MovieVote" if USE_POSTGRES else "recommendations_movievote"
         managed = False if USE_POSTGRES else True
         unique_together = ('movie', 'createdBy')
 
     def __str__(self):
         return f"{self.createdBy} voted {self.vote} for {self.movie.title}"
+    
+    
+    from django.db import models
+
+class User(models.Model):
+    id = models.CharField(max_length=25, primary_key=True)  # cuid in Prisma
+    name = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
+    email_verified = models.DateTimeField(null=True, blank=True)
+    image = models.CharField(max_length=255, null=True, blank=True)
+
+    # Relations (optional for read-only; can define if needed)
+    # accounts, sessions, posts, MovieVote would need separate models
+    # with ForeignKey pointing to this User
+
+    class Meta:
+        db_table = "User" if USE_POSTGRES else "recommendations_user"
+        managed = False if USE_POSTGRES else True
+

@@ -4,7 +4,7 @@ import os
 from movinderAPI import settings
 
 # Use absolute path — Render typically mounts code at /opt/render/project/src
-model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.h5")    
+model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
 
 
     

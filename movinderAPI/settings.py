@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'recommendations.middleware.LogRequestMiddleware', # Custom middleware for logging requests
 ]
 
 ROOT_URLCONF = 'movinderAPI.urls'

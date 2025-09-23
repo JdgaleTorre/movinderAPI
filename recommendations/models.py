@@ -32,6 +32,7 @@ class Movie(models.Model):
 
 class MovieVote(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="movie_votes")
+    movieId = models.IntegerField()  # Redundant but kept for compatibility
     vote = models.IntegerField()
     createdById = models.CharField(max_length=255)  # Now a plain string, not a FK
     createdAt = models.DateTimeField(auto_now_add=True)

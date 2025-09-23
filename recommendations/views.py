@@ -135,7 +135,7 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
     ratings = np.zeros(len(movie_ids))
 
     # Collect user ratings
-    user_ratings = MovieVote.objects.filter(createdBy=user_id).values('movie_id', 'vote')
+    user_ratings = MovieVote.objects.filter(createdById=user_id).values('movie_id', 'vote')
     print(f"Found {user_ratings.count()} votes for user {user_id}")
     for rate in user_ratings:
         movie_index = movie_map.get(rate['movie_id'])

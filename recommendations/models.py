@@ -33,18 +33,18 @@ class Movie(models.Model):
 class MovieVote(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="movie_votes")
     vote = models.IntegerField()
-    createdBy = models.CharField(max_length=255)  # Now a plain string, not a FK
+    createdById = models.CharField(max_length=255)  # Now a plain string, not a FK
     createdAt = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "MovieVote" if USE_POSTGRES else "recommendations_movievote"
         managed = False if USE_POSTGRES else True
-        unique_together = ('movie', 'createdBy')
+        unique_together = ('movie', 'createdById')
 
     def __str__(self):
-        return f"{self.createdBy} voted {self.vote} for {self.movie.title}"
-    
-    
+        return f"{self.createdById} voted {self.vote} for {self.movie.title}"
+
+
     from django.db import models
 
 class User(models.Model):

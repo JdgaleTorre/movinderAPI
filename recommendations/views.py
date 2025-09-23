@@ -80,20 +80,30 @@ def ping(request):
 
 
 def recommend_Hybrid_Third_Structure(user_id, top_n=5):
+    print("Starting hybrid recommendation...")
+    
     # Fetch users and movies
     users = list(User.objects.all().values('id'))
     movies = list(Movie.objects.all().values('id', 'movieId', 'combined_features'))
+    print(f"Total users: {len(users)}, total movies: {len(movies)}")
+
+    if not users or not movies:
+        print("No users or movies found in DB!")
+        return []
 
     user_map = {user['id']: i for i, user in enumerate(users)}
     movie_map = {movie['id']: i for i, movie in enumerate(movies)}
     reverse_movie_map = {i: movie['movieId'] for i, movie in enumerate(movies)}
 
+    print("User map and movie map created.")
+
     # Extract combined_features as a list
     combined_features_list = [movie['combined_features'] for movie in movies]
+    print(f"First 3 combined_features examples: {combined_features_list[:3]}")
 
     # Use TextVectorization instead of deprecated Tokenizer
-    max_tokens = 5000  # adjust depending on dataset size
-    max_length = 100   # sequence length
+    max_tokens = 5000
+    max_length = 100
 
     vectorizer = TextVectorization(
         max_tokens=max_tokens,
@@ -101,42 +111,56 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
         output_sequence_length=max_length
     )
 
-    # Adapt vectorizer to the text corpus
-    vectorizer.adapt(combined_features_list)
-
-    # Convert text to sequences (tensor)
-    sequences = vectorizer(combined_features_list)
-    features_padded_Hybrid_Third_Structure = sequences.numpy()
+    try:
+        vectorizer.adapt(combined_features_list)
+        sequences = vectorizer(combined_features_list)
+        features_padded_Hybrid_Third_Structure = sequences.numpy()
+        print(f"Vectorized features shape: {features_padded_Hybrid_Third_Structure.shape}")
+    except Exception as e:
+        print("Error in vectorizing text:", e)
+        return []
 
     # Map user and movie indices
-    user_idx = user_map[user_id]
+    user_idx = user_map.get(user_id)
+    if user_idx is None:
+        print(f"User ID {user_id} not found in user_map!")
+        return []
+
     movie_ids = np.array(list(movie_map.values()))
     content_features = features_padded_Hybrid_Third_Structure
+
+    print(f"User index: {user_idx}, number of movies: {len(movie_ids)}")
 
     # Initialize ratings array
     ratings = np.zeros(len(movie_ids))
 
     # Collect user ratings
     user_ratings = MovieVote.objects.filter(createdBy=user_id).values('movie_id', 'vote')
+    print(f"Found {user_ratings.count()} votes for user {user_id}")
     for rate in user_ratings:
         movie_index = movie_map.get(rate['movie_id'])
         if movie_index is not None:
             ratings[movie_index] = rate['vote']
 
+    print(f"Ratings array sample: {ratings[:10]}")
+
     # Predict using the hybrid model
-    predictions = hybrid_model.predict([
-        np.array([user_idx] * len(movie_ids)),  # user indices
-        movie_ids,                             # movie indices
-        ratings,                               # existing ratings
-        content_features                        # movie content features
-    ])
-    
+    try:
+        predictions = hybrid_model.predict([
+            np.array([user_idx] * len(movie_ids)),  # user indices
+            movie_ids,                             # movie indices
+            ratings,                               # existing ratings
+            content_features                        # movie content features
+        ])
+        print(f"Predictions shape: {predictions.shape}")
+    except Exception as e:
+        print("Error during model prediction:", e)
+        return []
 
     # Get top-N recommendations
     top_indices = predictions.flatten().argsort()[-top_n:][::-1]
     recommended_movie_ids = [movie_ids[i] for i in top_indices]
 
-    # Map back to movie IDs
     tmdbIds = [reverse_movie_map.get(movie, None) for movie in recommended_movie_ids]
     print('Recommended TMDB IDs:', tmdbIds)
 
@@ -145,5 +169,11 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
 
 @api_view(['GET'])
 def hybridNeuralNetworkRecomendations(request, userId, n_recommendations=10):
-    recommendations = recommend_Hybrid_Third_Structure(userId, top_n=n_recommendations)
-    return Response(recommendations)
+    print(f"API called for userId={userId}, n_recommendations={n_recommendations}")
+    try:
+        recommendations = recommend_Hybrid_Third_Structure(userId, top_n=n_recommendations)
+        print("Returning recommendations:", recommendations)
+        return Response(recommendations)
+    except Exception as e:
+        print("Error in API view:", e)
+        return Response({"error": str(e)}, status=500)

@@ -138,6 +138,7 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
 
     # Map back to movie IDs
     tmdbIds = [reverse_movie_map.get(movie, None) for movie in recommended_movie_ids]
+    print('Recommended TMDB IDs:', tmdbIds)
 
     return tmdbIds
 

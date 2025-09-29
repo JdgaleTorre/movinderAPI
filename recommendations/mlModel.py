@@ -6,6 +6,9 @@ import os
 from movinderAPI import settings
 from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
+from keras.layers import Input, Embedding, Dense, Flatten, Concatenate, Dropout, BatchNormalization
+from keras.models import Model
+from keras.optimizers import Adam
 
 from recommendations.models import Movie, MovieVote, User
 import pandas as pd
@@ -96,10 +99,56 @@ def train_hybrid_model():
 
     # 5️⃣ Train model
     try:
+        print("Compiling Hybrid model...")
+        # Define user and movie input layers
+        num_users = len(user_map)
+        num_movies = max(movie_map.values()) + 1
+        embedding_dim = 100
+
+        # User embedding
+        user_input = Input(shape=(1,), name='user_input')
+        user_embedding = Embedding(input_dim=num_users, output_dim=embedding_dim, name='user_embedding')(user_input)
+
+        # Movie embedding
+        movie_input = Input(shape=(1,), name='movie_input')
+        movie_embedding = Embedding(input_dim=num_movies, output_dim=embedding_dim, name='movie_embedding')(movie_input)
+
+        # Rating embedding
+        rating_input = Input(shape=(1,), name='rating_input')
+        rating_embedding = Embedding(input_dim=num_movies, output_dim=embedding_dim, name='rating_embedding')(rating_input)
+
+        # --- Content-Based Part ---
+        content_input = Input(shape=(max_length,), name="content_features")
+        x = Dense(128, activation="elu")(content_input)
+        x = Dense(64, activation="elu")(x)
+        content_embedding = Dense(32, activation="elu", name='content_embedding')(x)
+        content_flatten = Flatten()(content_embedding)
+
+        # --- Concatenate User, Movie, and Rating Embeddings ---
+        concat_embeddings = Concatenate()([user_embedding, movie_embedding, rating_embedding])
+        concat_flatten = Flatten()(concat_embeddings)  # <-- instead of LSTM
+
+        # --- Hybrid Model ---
+        combined_embeddings = Concatenate()([concat_flatten, content_flatten])
+
+        x = Dense(512, activation='elu')(combined_embeddings)
+        x = Dropout(0.3)(x)
+        x = Dense(256, activation='elu')(x)
+        x = BatchNormalization()(x)
+
+        # Output layer
+        output = Dense(1, activation='sigmoid')(x)
+
+        # Define and compile the hybrid model
+        hybrid_model = Model(inputs=[user_input, movie_input, rating_input, content_input],
+                                outputs=output, name="HybridNN")
+        hybrid_model.compile(optimizer=Adam(learning_rate=0.0001), loss='mse')
+
+        hybrid_model.summary()
+
+
         print("🚀 Training hybrid model...")
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        # print([X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]])
-        hybrid_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
         history = hybrid_model.fit(
             [X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]],

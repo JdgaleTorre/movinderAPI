@@ -98,7 +98,8 @@ def train_hybrid_model():
     try:
         print("🚀 Training hybrid model...")
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        print([X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]])
+        # print([X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]])
+        hybrid_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
         history = hybrid_model.fit(
             [X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]],

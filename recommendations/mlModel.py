@@ -13,17 +13,6 @@ from keras.optimizers import Adam
 from recommendations.models import Movie, MovieVote, User
 import pandas as pd
 
-
-# Use absolute path — Render typically mounts code at /opt/render/project/src
-model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
-
-
-    
-print("🔄 Loading hybrid model...")
-hybrid_model = tf.keras.models.load_model(model_path)
-print("✅ Hybrid model loaded once at startup")
-
-
 def train_hybrid_model():
     print("🚀 Starting hybrid model training...")
 
@@ -140,17 +129,17 @@ def train_hybrid_model():
         output = Dense(1, activation='sigmoid')(x)
 
         # Define and compile the hybrid model
-        hybrid_model = Model(inputs=[user_input, movie_input, rating_input, content_input],
+        new_hybrid_model = Model(inputs=[user_input, movie_input, rating_input, content_input],
                                 outputs=output, name="HybridNN")
-        hybrid_model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+        new_hybrid_model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 
-        hybrid_model.summary()
+        new_hybrid_model.summary()
 
 
         print("🚀 Training hybrid model...")
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
-        history = hybrid_model.fit(
+        history = new_hybrid_model.fit(
             [X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]],
             y_train,
             epochs=100,
@@ -164,13 +153,26 @@ def train_hybrid_model():
         print("❌ Error during model training:", e)
         return []
 
-    # 6️⃣ Save model
-    try:
-        hybrid_model.save(model_path)
-        print(f"💾 Model saved to {model_path}")
-    except Exception as e:
-        print("❌ Error saving model:", e)
-        return []
+    # # 6️⃣ Save model
+    # try:
+    #     new_hybrid_model.save(model_path)
+    #     print(f"💾 Model saved to {model_path}")
+    # except Exception as e:
+    #     print("❌ Error saving model:", e)
+    #     return []
+    
 
     print("🎉 Hybrid model retrained and saved successfully.")
-    return True
+    return new_hybrid_model
+
+
+
+# Use absolute path — Render typically mounts code at /opt/render/project/src
+model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
+# print("🔄 Loading hybrid model...")
+# hybrid_model = tf.keras.models.load_model(model_path)
+# print("✅ Hybrid model loaded once at startup")
+
+print("🔄 Training hybrid model...")
+hybrid_model = train_hybrid_model()
+print("✅ Hybrid model trained once at startup")

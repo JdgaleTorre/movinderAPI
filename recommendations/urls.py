@@ -8,5 +8,5 @@ urlpatterns = [
     path("ping/", views.ping, name="ping"),
     path("hybrid/<str:userId>/", views.hybridNeuralNetworkRecomendations, name="hybrid_recommendations"),
     path("hybrid/<str:userId>/<int:n_recommendations>/", views.hybridNeuralNetworkRecomendations, name="hybrid_recommendations"),
-    path("train-hybrid-model/", views.train_hybrid_model_view, name="train_hybrid_model"),
+    path("train-hybrid-model/", views.trainModel, name="train_hybrid_model"),
 ]

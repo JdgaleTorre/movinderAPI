@@ -7,7 +7,7 @@ from movinderAPI import settings
 from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
 
-from recommendations.models import Movie, MovieVote
+from recommendations.models import Movie, MovieVote, User
 import pandas as pd
 
 
@@ -55,12 +55,21 @@ def train_hybrid_model():
     X_qs = MovieVote.objects.all().values('createdById', 'movieId', 'vote')
     X_list = list(X_qs)
     print(f"📊 Pulled {len(X_list)} rows of MovieVotes")
+    
+    # Fetch users and movies
+    users = list(User.objects.all().values('id'))
+    movies = list(Movie.objects.all().values('id'))
+    
+    user_map = {user['id']: i for i, user in enumerate(users)}
+    movie_map = {movie['id']: i for i, movie in enumerate(movies)}
+    
+    MAX_RATING = 5
 
     try:
         # Convert to NumPy arrays
-        created_by_ids = np.array([row['createdById'] for row in X_list])
-        movie_ids = np.array([row['movieId'] for row in X_list])
-        votes = np.array([row['vote'] for row in X_list])
+        created_by_ids = np.array([user_map[row['createdById']] for row in X_list])
+        movie_ids = np.array([movie_map[row['movieId']] for row in X_list])
+        votes = np.array([row['vote'] / MAX_RATING for row in X_list])
 
         print(f"🔢 created_by_ids shape: {created_by_ids.shape}")
         print(f"🔢 movie_ids shape: {movie_ids.shape}")

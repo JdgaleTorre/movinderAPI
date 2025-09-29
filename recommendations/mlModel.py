@@ -7,7 +7,7 @@ from movinderAPI import settings
 from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
 
-from recommendations.models import MovieVote
+from recommendations.models import Movie, MovieVote
 import pandas as pd
 
 
@@ -25,9 +25,10 @@ def train_hybrid_model():
     print("🚀 Starting hybrid model training...")
 
     # 1️⃣ Pull combined features
-    votes_qs = MovieVote.objects.all().values('movie__combined_features')
-    combined_features_list = [movie['movie__combined_features'] for movie in votes_qs]
-    print(f"📊 Pulled {len(combined_features_list)} combined features from DB")
+    qs = Movie.objects.all().values('id','combined_features')
+    votes = MovieVote.objects.all().values('movieId')
+    combined_features_list = [qs['combined_features'] for vote in votes for qs in qs if qs['id'] == vote['movieId']]
+    print(f"📊 Pulled {len(combined_features_list)} combined features from DB, votes {len(votes)}")
 
     # 2️⃣ Text Vectorization
     max_tokens = 5000

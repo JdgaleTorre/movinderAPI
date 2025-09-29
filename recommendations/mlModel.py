@@ -142,11 +142,11 @@ def train_hybrid_model():
         history = new_hybrid_model.fit(
             [X_train[:, 0], X_train[:, 1], X_train[:, 2], X_train[:, 3:]],
             y_train,
-            epochs=100,
+            epochs=50,
             batch_size=128,
             callbacks=[early_stopping],
             validation_data=([X_test[:, 0], X_test[:, 1], X_test[:, 2], X_test[:, 3:]], y_test),
-            verbose=1  # ensure logs print in Hugging Face console
+            verbose=0  # ensure logs print in Hugging Face console
         )
         print("✅ Training complete.")
     except Exception as e:

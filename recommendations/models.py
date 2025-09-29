@@ -46,8 +46,6 @@ class MovieVote(models.Model):
         return f"{self.createdById} voted {self.vote} for {self.movie.title}"
 
 
-    from django.db import models
-
 class User(models.Model):
     id = models.CharField(max_length=25, primary_key=True)  # cuid in Prisma
     name = models.CharField(max_length=255, null=True, blank=True)

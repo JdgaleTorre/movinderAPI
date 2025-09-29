@@ -25,8 +25,8 @@ def train_hybrid_model():
     print("🚀 Starting hybrid model training...")
 
     # 1️⃣ Pull combined features
-    votes_qs = MovieVote.objects.all().values('combined_features')
-    combined_features_list = [movie['combined_features'] for movie in votes_qs]
+    votes_qs = MovieVote.objects.all().values('movie__combined_features')
+    combined_features_list = [movie['movie__combined_features'] for movie in votes_qs]
     print(f"📊 Pulled {len(combined_features_list)} combined features from DB")
 
     # 2️⃣ Text Vectorization

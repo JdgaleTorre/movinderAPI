@@ -142,7 +142,7 @@ def train_hybrid_model():
         # Define and compile the hybrid model
         hybrid_model = Model(inputs=[user_input, movie_input, rating_input, content_input],
                                 outputs=output, name="HybridNN")
-        hybrid_model.compile(optimizer=Adam(learning_rate=0.0001), loss='mse')
+        hybrid_model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 
         hybrid_model.summary()
 

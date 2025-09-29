@@ -99,7 +99,7 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
 
     # Extract combined_features as a list
     combined_features_list = [movie['combined_features'] for movie in movies]
-    print(f"First 3 combined_features examples: {combined_features_list[:3]}")
+    # print(f"First 3 combined_features examples: {combined_features_list[:3]}")
 
     # Use TextVectorization instead of deprecated Tokenizer
     max_tokens = 5000
@@ -176,4 +176,15 @@ def hybridNeuralNetworkRecomendations(request, userId, n_recommendations=10):
         return Response(recommendations)
     except Exception as e:
         print("Error in API view:", e)
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(['GET'])
+def trainModel(request):
+    try:
+        from .mlModel import train_hybrid_model  # Ensure this import is correct
+        train_hybrid_model()
+        return Response({"message": "Model training initiated"})
+    except Exception as e:
+        print("Error in trainModel view:", e)
         return Response({"error": str(e)}, status=500)

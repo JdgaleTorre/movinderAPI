@@ -10,7 +10,7 @@ from keras.preprocessing.sequence import pad_sequences
 from recommendations.models import Movie, User, MovieVote
 import pandas as pd
 import numpy as np
-from .mlModel import hybrid_model  # Ensure this import is correct
+from .mlModel import hybrid_model, train_hybrid_model  # Ensure this import is correct
 
 def recommend_movies_euclidean(selected_idx, df, n_recommendations=3, tfidf_matrix=None):
     try:
@@ -182,7 +182,7 @@ def hybridNeuralNetworkRecomendations(request, userId, n_recommendations=10):
 @api_view(['GET'])
 def trainModel(request):
     try:
-        from .mlModel import train_hybrid_model  # Ensure this import is correct
+        print('Training model initiated via API call')
         train_hybrid_model()
         return Response({"message": "Model training initiated"})
     except Exception as e:

@@ -27,7 +27,7 @@ def train_hybrid_model():
     # 1️⃣ Pull combined features
     qs = Movie.objects.all().values('id','combined_features')
     votes = MovieVote.objects.all().values('movieId')
-    combined_features_list = [qs['combined_features'] for vote in votes for qs in qs if qs['id'] == vote['movieId']]
+    combined_features_list = [q['combined_features'] for vote in votes for q in qs if q['id'] == vote['movieId']]
     print(f"📊 Pulled {len(combined_features_list)} combined features from DB, votes {len(votes)}")
 
     # 2️⃣ Text Vectorization

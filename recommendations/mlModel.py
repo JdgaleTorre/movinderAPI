@@ -163,6 +163,8 @@ def train_hybrid_model():
     
 
     print("🎉 Hybrid model retrained and saved successfully.")
+    global hybrid_model
+    hybrid_model = new_hybrid_model
     return new_hybrid_model
 
 

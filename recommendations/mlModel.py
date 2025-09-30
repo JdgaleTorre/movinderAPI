@@ -12,6 +12,27 @@ from keras.optimizers import Adam
 
 from recommendations.models import Movie, MovieVote, User
 import pandas as pd
+from huggingface_hub import HfApi, HfFolder, upload_file, hf_hub_download
+
+
+
+hybrid_model = None  # global reference
+
+def load_model(repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
+    global hybrid_model
+    model_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="model")
+    try:
+        print(f"🔄 Loading model from {model_path}")
+        hybrid_model = tf.keras.models.load_model(model_path)
+        print("✅ Model loaded")
+    except Exception as e:
+        print(f"⚠️ Could not load model: {e}")
+        hybrid_model = None
+        train_hybrid_model()
+    print("✅ Model loaded from Hugging Face Hub")
+
+        
+
 
 def train_hybrid_model():
     print("🚀 Starting hybrid model training...")
@@ -153,28 +174,31 @@ def train_hybrid_model():
         print("❌ Error during model training:", e)
         return []
 
-    # # 6️⃣ Save model
-    # try:
-    #     new_hybrid_model.save(model_path)
-    #     print(f"💾 Model saved to {model_path}")
-    # except Exception as e:
-    #     print("❌ Error saving model:", e)
-    #     return []
+    # 6️⃣ Save model
+    try:
+        save_model_to_hf(new_hybrid_model)
+    except Exception as e:
+        print("❌ Error saving model:", e)
+        return []
     
 
     print("🎉 Hybrid model retrained and saved successfully.")
     global hybrid_model
     hybrid_model = new_hybrid_model
-    return new_hybrid_model
+    
+    
 
+def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
+    # Save locally first
+    local_path = f"/tmp/{filename}"
+    model.save(local_path)
 
-
-# Use absolute path — Render typically mounts code at /opt/render/project/src
-model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")    
-# print("🔄 Loading hybrid model...")
-# hybrid_model = tf.keras.models.load_model(model_path)
-# print("✅ Hybrid model loaded once at startup")
-
-print("🔄 Training hybrid model...")
-hybrid_model = train_hybrid_model()
-print("✅ Hybrid model trained once at startup")
+    # Upload to Hub
+    upload_file(
+        path_or_fileobj=local_path,
+        path_in_repo=filename,
+        repo_id=repo_id,
+        repo_type="model",
+        token=os.getenv("HF_TOKEN")
+    )
+    print(f"✅ Model uploaded to https://huggingface.co/{repo_id}")

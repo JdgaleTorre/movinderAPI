@@ -190,6 +190,10 @@ def train_hybrid_model():
     
 
 def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
+    
+    token = os.getenv("HF_TOKEN")
+    print("🔑 Token loaded?", bool(token))  # should be True
+    
     # Save locally first
     local_path = f"/tmp/{filename}"
     model.save(local_path)

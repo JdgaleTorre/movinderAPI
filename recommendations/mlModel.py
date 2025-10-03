@@ -193,7 +193,7 @@ def train_hybrid_model():
 def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
     # Save to in-memory buffer
     
-    model_path = os.path.join(settings.BASE_DIR, "Models", "HybridModel.keras")  
+    model_path = os.path.join('tmp', "Models", "HybridModel.keras")  
     model.save(model_path)
 
     # Upload directly from memory

@@ -198,7 +198,7 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
     # Upload directly from memory
     upload_file(
-        path_or_fileobj=buffer,
+        path_or_fileobj=model_path,
         path_in_repo=filename,
         repo_id=repo_id,
         repo_type="model",

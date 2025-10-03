@@ -195,7 +195,7 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     print("🔑 Token loaded?", bool(token))  # should be True
     
     # Save locally first
-    local_path = f"/tmp/{filename}"
+    local_path = f"/tmp/huggingface/{filename}"
     model.save(local_path)
 
     # Upload to Hub

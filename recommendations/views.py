@@ -155,6 +155,7 @@ def recommend_Hybrid_Third_Structure(user_id, top_n=5):
         print(f"Predictions shape: {predictions.shape}")
     except Exception as e:
         print("Error during model prediction:", e)
+        train_hybrid_model()  # Retrain model if prediction fails
         return []
 
     # Get top-N recommendations

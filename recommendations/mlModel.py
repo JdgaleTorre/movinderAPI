@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
+import io
 from movinderAPI import settings
 from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
@@ -190,20 +191,17 @@ def train_hybrid_model():
     
 
 def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
-    
-    token = os.getenv("HF_TOKEN")
-    print("🔑 Token loaded?", bool(token))  # should be True
-    
-    # Save locally first
-    local_path = f"/tmp/huggingface/{filename}"
-    model.save(local_path)
+    # Save to in-memory buffer
+    buffer = io.BytesIO()
+    model.save(buffer, save_format="keras")
+    buffer.seek(0)
 
-    # Upload to Hub
+    # Upload directly from memory
     upload_file(
-        path_or_fileobj=local_path,
+        path_or_fileobj=buffer,
         path_in_repo=filename,
         repo_id=repo_id,
         repo_type="model",
-        token=os.getenv("HF_TOKEN")
+        token=os.getenv("HF_TOKEN"),
     )
-    print(f"✅ Model uploaded to https://huggingface.co/{repo_id}")
+    print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")

@@ -21,7 +21,7 @@ hybrid_model = None  # global reference
 def load_model(repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
     global hybrid_model
     try:
-        model_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="model")
+        model_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="model", token=os.getenv("HF_TOKEN"))
         print(f"🔄 Loading model from {model_path}")
         hybrid_model = tf.keras.models.load_model(model_path)
         print("✅ Model loaded")

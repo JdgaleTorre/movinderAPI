@@ -195,6 +195,8 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     
     model_path = f"/tmp/{filename}"
     model.save(model_path)
+    
+    print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
 
     # Upload directly from memory
     upload_file(

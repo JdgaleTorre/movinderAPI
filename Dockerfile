@@ -4,6 +4,11 @@ FROM python:3.11-slim
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV HF_HOME=/tmp/huggingface
+ENV TRANSFORMERS_CACHE=/tmp/huggingface/transformers
+ENV HF_DATASETS_CACHE=/tmp/huggingface/datasets
+ENV HF_MODULES_CACHE=/tmp/huggingface/modules
+
 
 # Create a working directory
 WORKDIR /app

@@ -29,6 +29,7 @@ def load_model(repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
         print(f"⚠️ Could not load model: {e}")
         hybrid_model = None
         train_hybrid_model()
+        return
     print("✅ Model loaded from Hugging Face Hub")
 
         

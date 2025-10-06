@@ -14,7 +14,7 @@ from keras.optimizers import Adam
 
 from recommendations.models import Movie, MovieVote, User
 import pandas as pd
-from huggingface_hub import HfApi, hf_hub_download, upload_file
+from huggingface_hub import CommitOperationAdd, HfApi, hf_hub_download, upload_file
 
 
 from datetime import datetime
@@ -194,7 +194,7 @@ def train_hybrid_model():
     
     
 
-def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.h5"):
+def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
     # Save to in-memory buffer
     # ✅ Use a directory guaranteed to be writable in Hugging Face Spaces
     tmp_dir = "/tmp/hf_upload"
@@ -203,7 +203,7 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
     readme_path = f"{tmp_dir}/README.md"
     with open(readme_path, "w") as f:
-        f.write(f'---\n license: mit \n language:\n- en\n---')
+        f.write(f'---\nlicense: mit \nlanguage:\n-en\n---\n\n')
         f.write(f"# Movinder Hybrid Model\n\n")
         f.write(f"**Last saved:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("This model was retrained and uploaded automatically from Hugging Face Spaces.\n")
@@ -221,10 +221,18 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
     try:
         api = HfApi(token=os.getenv("HF_TOKEN"))
-        api.upload_folder(
-            folder_path=tmp_dir,
+
+        # Create commit manually
+        operations = [
+            CommitOperationAdd(path_in_repo=filename, path_or_fileobj=model_path),
+            CommitOperationAdd(path_in_repo="README.md", path_or_fileobj=readme_path),
+        ]
+
+        api.create_commit(
             repo_id=repo_id,
             repo_type="model",
+            operations=operations,
+            commit_message="Upload model and README",
         )
         
         print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")

@@ -208,10 +208,10 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
         f.write("This model was retrained and uploaded automatically from Hugging Face Spaces.\n")
 
 
-    model_path = f"{tmp_dir}/{filename}"
-    model.save(model_path)
+    # model_path = f"{tmp_dir}/{filename}"
+    # model.save(model_path)
     
-    print("Model file permissions:", oct(os.stat(model_path).st_mode))
+    # print("Model file permissions:", oct(os.stat(model_path).st_mode))
     
     print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
     

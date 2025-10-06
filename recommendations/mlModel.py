@@ -203,6 +203,8 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     model_path = f"{tmp_dir}/{filename}"
     model.save(model_path)
     
+    print("Model file permissions:", oct(os.stat(model_path).st_mode))
+    
     print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
     
     token = os.getenv("HF_TOKEN")
@@ -210,11 +212,16 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
 
     api = HfApi()
-    api.upload_file(
-        path_or_fileobj=Path(model_path),
-        path_in_repo=filename,
-        repo_id=repo_id,
-        repo_type="model",
-        token=os.getenv("HF_TOKEN"),
-    )
+    try:
+        api.upload_file(
+            path_or_fileobj=Path(model_path),
+            path_in_repo=filename,
+            repo_id=repo_id,
+            repo_type="model",
+            token=token,
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("❌ Error uploading model.")
     print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")

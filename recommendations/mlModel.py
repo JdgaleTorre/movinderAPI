@@ -1,4 +1,5 @@
 # recommendations/ml_model.py
+from pathlib import Path
 import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -195,15 +196,22 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     # ✅ Use a directory guaranteed to be writable in Hugging Face Spaces
     tmp_dir = "/tmp/hf_upload"
     os.makedirs(tmp_dir, exist_ok=True)
+    
+    with open(f"{tmp_dir}/test.txt", "w") as f:
+        f.write("test")
 
     model_path = f"{tmp_dir}/{filename}"
     model.save(model_path)
     
     print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
+    
+    token = os.getenv("HF_TOKEN")
+    assert token is not None, "HF_TOKEN is not set"
+
 
     api = HfApi()
     api.upload_file(
-        path_or_fileobj=model_path,
+        path_or_fileobj=Path(model_path),
         path_in_repo=filename,
         repo_id=repo_id,
         repo_type="model",

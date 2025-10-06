@@ -4,10 +4,10 @@ FROM python:3.11-slim
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV HF_HOME=/tmp/.cache/huggingface
-ENV HF_HUB_CACHE=/tmp/.cache/huggingface/hub
-ENV HF_MODULES_CACHE=/tmp/.cache/huggingface/modules
-ENV TRANSFORMERS_CACHE=/tmp/.cache/huggingface/transformers
+ENV HF_HOME=/tmp/huggingface
+ENV HF_HUB_CACHE=/tmp/huggingface/hub
+ENV HF_MODULES_CACHE=/tmp/huggingface/modules
+ENV TRANSFORMERS_CACHE=/tmp/huggingface/transformers
 
 
 

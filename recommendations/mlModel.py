@@ -1,4 +1,5 @@
 # recommendations/ml_model.py
+import datetime
 from pathlib import Path
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -14,7 +15,7 @@ from keras.optimizers import Adam
 
 from recommendations.models import Movie, MovieVote, User
 import pandas as pd
-from huggingface_hub import HfApi, HfFolder, upload_file, hf_hub_download
+from huggingface_hub import HfApi, hf_hub_download, upload_file
 
 
 
@@ -197,8 +198,13 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     tmp_dir = "/tmp/hf_upload"
     os.makedirs(tmp_dir, exist_ok=True)
     
-    with open(f"{tmp_dir}/test.txt", "w") as f:
-        f.write("test")
+
+    readme_path = f"{tmp_dir}/README.md"
+    with open(readme_path, "w") as f:
+        f.write(f"# Movinder Hybrid Model\n\n")
+        f.write(f"**Last saved:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write("This model was retrained and uploaded automatically from Hugging Face Spaces.\n")
+
 
     model_path = f"{tmp_dir}/{filename}"
     model.save(model_path)
@@ -210,18 +216,16 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     token = os.getenv("HF_TOKEN")
     assert token is not None, "HF_TOKEN is not set"
 
-
-    api = HfApi()
     try:
-        api.upload_file(
-            path_or_fileobj=Path(model_path),
-            path_in_repo=filename,
+        api = HfApi()
+        api.upload_folder(
+            folder_path=tmp_dir,
             repo_id=repo_id,
             repo_type="model",
             token=token,
         )
+        print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")
     except Exception as e:
         import traceback
         traceback.print_exc()
         print("❌ Error uploading model.")
-    print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")

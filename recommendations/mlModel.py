@@ -180,6 +180,10 @@ def train_hybrid_model():
         print("❌ Error during model training:", e)
         return []
 
+    print("🎉 Hybrid model retrained and saved successfully.")
+    global hybrid_model
+    hybrid_model = new_hybrid_model
+
     # 6️⃣ Save model
     try:
         save_model_to_hf(new_hybrid_model)
@@ -187,10 +191,6 @@ def train_hybrid_model():
         print("❌ Error saving model:", e)
         return []
     
-
-    print("🎉 Hybrid model retrained and saved successfully.")
-    global hybrid_model
-    hybrid_model = new_hybrid_model
     
     
 
@@ -219,12 +219,12 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     assert token is not None, "HF_TOKEN is not set"
 
     try:
-        api = HfApi()
-        api.upload_folder(
-            folder_path=tmp_dir,
+        api = HfApi(token=os.getenv("HF_TOKEN"))
+        api.upload_file(
+            path_or_fileobj=model_path,
             repo_id=repo_id,
             repo_type="model",
-            token=token,
+            path_in_repo=filename,
         )
         print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")
     except Exception as e:

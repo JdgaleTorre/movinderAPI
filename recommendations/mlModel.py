@@ -194,7 +194,7 @@ def train_hybrid_model():
     
     
 
-def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
+def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.h5"):
     # Save to in-memory buffer
     # ✅ Use a directory guaranteed to be writable in Hugging Face Spaces
     tmp_dir = "/tmp/hf_upload"
@@ -203,15 +203,16 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
     readme_path = f"{tmp_dir}/README.md"
     with open(readme_path, "w") as f:
+        f.write(f'---\n license: mit \n language:\n- en\n---')
         f.write(f"# Movinder Hybrid Model\n\n")
         f.write(f"**Last saved:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("This model was retrained and uploaded automatically from Hugging Face Spaces.\n")
 
 
-    # model_path = f"{tmp_dir}/{filename}"
-    # model.save(model_path)
+    model_path = f"{tmp_dir}/{filename}"
+    model.save(model_path)
     
-    # print("Model file permissions:", oct(os.stat(model_path).st_mode))
+    print("Model file permissions:", oct(os.stat(model_path).st_mode))
     
     print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
     

@@ -192,14 +192,17 @@ def train_hybrid_model():
 
 def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
     # Save to in-memory buffer
-    
-    model_path = f"/tmp/{filename}"
+    # ✅ Use a directory guaranteed to be writable in Hugging Face Spaces
+    tmp_dir = "/home/hf_upload"
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    model_path = f"{tmp_dir}/{filename}"
     model.save(model_path)
     
     print(f"🔄 Saving model to Hugging Face Hub at {repo_id}/{filename}...")
 
-    # Upload directly from memory
-    upload_file(
+    api = HfApi()
+    api.upload_file(
         path_or_fileobj=model_path,
         path_in_repo=filename,
         repo_id=repo_id,

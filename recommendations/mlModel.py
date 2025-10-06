@@ -220,12 +220,12 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
 
     try:
         api = HfApi(token=os.getenv("HF_TOKEN"))
-        api.upload_file(
-            path_or_fileobj=model_path,
+        api.upload_folder(
+            folder_path=tmp_dir,
             repo_id=repo_id,
             repo_type="model",
-            path_in_repo=filename,
         )
+        
         print(f"✅ Model uploaded: https://huggingface.co/{repo_id}/blob/main/{filename}")
     except Exception as e:
         import traceback

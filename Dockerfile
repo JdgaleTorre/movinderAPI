@@ -9,6 +9,9 @@ ENV HF_HUB_CACHE=/tmp/huggingface/hub
 ENV HF_MODULES_CACHE=/tmp/huggingface/modules
 ENV TRANSFORMERS_CACHE=/tmp/huggingface/transformers
 
+# Ensure group-writeable permissions on Hugging Face cache folders
+RUN mkdir -p /tmp/hf_upload /tmp/huggingface && \
+    chmod -R g+rwxs /tmp/hf_upload /tmp/huggingface
 
 
 # Create a working directory

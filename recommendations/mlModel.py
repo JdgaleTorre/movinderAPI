@@ -223,7 +223,12 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     token = os.getenv("HF_TOKEN")
     assert token is not None, "HF_TOKEN is not set"
 
-    print(os.system("ls -la /tmp"))
+    exit_code = os.system("chmod -R g+rwxs /tmp/hf_upload /tmp/huggingface")
+    if exit_code != 0:
+        print("⚠️ Failed to update permissions")
+    else:
+        print("✅ Permissions updated successfully")
+
 
     try:
         api = HfApi(token=os.getenv("HF_TOKEN"))

@@ -223,6 +223,8 @@ def save_model_to_hf(model, repo_id="JoseGale/MovinderModel", filename="HybridMo
     token = os.getenv("HF_TOKEN")
     assert token is not None, "HF_TOKEN is not set"
 
+    print(os.system("ls -la /tmp"))
+
     try:
         api = HfApi(token=os.getenv("HF_TOKEN"))
 

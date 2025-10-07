@@ -24,18 +24,19 @@ from datetime import datetime
 hybrid_model = None  # global reference
 
 def load_model(repo_id="JoseGale/MovinderModel", filename="HybridModel.keras"):
-    global hybrid_model
-    try:
-        model_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="model", token=os.getenv("HF_TOKEN"))
-        print(f"🔄 Loading model from {model_path}")
-        hybrid_model = tf.keras.models.load_model(model_path)
-        print("✅ Model loaded")
-    except Exception as e:
-        print(f"⚠️ Could not load model: {e}")
-        hybrid_model = None
-        train_hybrid_model()
-        return
-    print("✅ Model loaded from Hugging Face Hub")
+    # global hybrid_model
+    # try:
+    #     model_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="model", token=os.getenv("HF_TOKEN"))
+    #     print(f"🔄 Loading model from {model_path}")
+    #     hybrid_model = tf.keras.models.load_model(model_path)
+    #     print("✅ Model loaded")
+    # except Exception as e:
+    #     print(f"⚠️ Could not load model: {e}")
+    #     hybrid_model = None
+    #     
+    #     return
+    # print("✅ Model loaded from Hugging Face Hub")
+    train_hybrid_model()
 
         
 
@@ -184,12 +185,12 @@ def train_hybrid_model():
     global hybrid_model
     hybrid_model = new_hybrid_model
 
-    # 6️⃣ Save model
-    try:
-        save_model_to_hf(new_hybrid_model)
-    except Exception as e:
-        print("❌ Error saving model:", e)
-        return []
+    # # 6️⃣ Save model
+    # try:
+    #     save_model_to_hf(new_hybrid_model)
+    # except Exception as e:
+    #     print("❌ Error saving model:", e)
+    #     return []
     
     
     
